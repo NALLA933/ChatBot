@@ -3,20 +3,20 @@
 # ═══════════════════════════════════════════════════════════
 
 # ──── BOT CREDENTIALS ────
-API_ID = 
-API_HASH = ""
-BOT_TOKEN = ""
-OWNER_ID = 
+API_ID = 35660683
+API_HASH = "7afb42cd73fb5f3501062ffa6a1f87f7"
+BOT_TOKEN = "8695499371:AAGEW1YRI0hlmHNMhO6STvpSDwbHqqWnQsc"
+OWNER_ID = 8453236527
 
 # ──── MONGODB ATLAS ────
-MONGO_URI = ""
+MONGO_URI = "mongodb+srv://hnyx:wywyw2@cluster0.9dxlslv.mongodb.net/?retryWrites=true&w=majority"
 DB_NAME = "senpai_bot"
 
 # ──── START MEDIA ────
 # Image: .jpg .png .jpeg | Video: .mp4 .mov .webm
 # Single URL string OR list of URLs
 START_MEDIA = "https://files.catbox.moe/yext7l.mp4"
-SEND_MEDIA_IN_GROUP = True
+SEND_MEDIA_IN_GROUP = False
 
 # ──── LINKS ────
 SUPPORT_GROUP = "https://t.me/THE_DRAGON_SUPPORT"
@@ -27,7 +27,7 @@ OWNER_LINK = "https://t.me/ll_Yoichi_Isagi_ll"
 FRIEND_GCS = []
 
 # ──── GROQ AI ────
-GROQ_API_KEY = ""
+GROQ_API_KEY = "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"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 BOT_USERNAME = "SenpaiXChat_Bot"  # without @
 BOT_STICKER_PACK = "Smolitano_by_fStikBot"
@@ -87,3 +87,7 @@ GROUP_WELCOME = """
 👇 ʜɪᴛ /start ᴛᴏ ꜱᴇᴇ ᴡʜᴀᴛ ɪ ᴄᴀɴ ᴅᴏ! 💙
 ~ ꜱᴇɴᴘᴀɪ 💫
 """
+
+
+
+Isme se sari id hata do
