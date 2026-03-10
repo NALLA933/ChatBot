@@ -87,7 +87,3 @@ GROUP_WELCOME = """
 👇 ʜɪᴛ /start ᴛᴏ ꜱᴇᴇ ᴡʜᴀᴛ ɪ ᴄᴀɴ ᴅᴏ! 💙
 ~ ꜱᴇɴᴘᴀɪ 💫
 """
-
-
-
-Isme se sari id hata do
