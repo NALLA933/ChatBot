@@ -16,7 +16,7 @@ DB_NAME = "senpai_bot"
 # Image: .jpg .png .jpeg | Video: .mp4 .mov .webm
 # Single URL string OR list of URLs
 START_MEDIA = "https://files.catbox.moe/yext7l.mp4"
-SEND_MEDIA_IN_GROUP = False
+SEND_MEDIA_IN_GROUP = True
 
 # ──── LINKS ────
 SUPPORT_GROUP = "https://t.me/THE_DRAGON_SUPPORT"
