@@ -13,6 +13,11 @@ async def connect_db():
     db = _client[DB_NAME]
     # Ping to verify connection
     await _client.admin.command("ping")
+    # Create TTL index for sticker_packs (auto-expire after 7 days)
+    await db.sticker_packs.create_index(
+        "saved_at",
+        expireAfterSeconds=604800,
+    )
     return db
 
 

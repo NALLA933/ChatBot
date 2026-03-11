@@ -8,12 +8,12 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatAction
 from config import (
     GROQ_API_KEY, GROQ_MODEL, BOT_USERNAME,
-    BOT_STICKER_PACK, AI_PERSONA, OWNER_ID,
+    AI_PERSONA, OWNER_ID,
 )
 from database.chat_history import add_message, get_history, clear_history
+from database.users import upsert_ai_user
 from utils.sticker_helper import (
-    save_user_sticker_pack, get_user_sticker,
-    get_bot_sticker, save_bot_pack,
+    save_user_sticker_pack, get_user_sticker, has_user_stickers,
 )
 from utils.smallcaps import sc
 
@@ -95,29 +95,21 @@ async def get_ai_reply(user_id: int, user_message: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════
-#  STICKER LOGIC
+#  STICKER LOGIC — Only user packs (no bot pack)
 # ═══════════════════════════════════════════════════════
 
 async def maybe_send_sticker(client: Client, message: Message, user_id: int) -> bool:
-    """Maybe send a sticker reply. Return True if sticker was sent."""
+    """Maybe send a sticker reply from user's saved pack. Return True if sent."""
     try:
-        if message.sticker:
-            # User sent a sticker → 60% chance reply with sticker
-            if random.random() < 0.60:
-                # Try user pack first, fallback to bot pack
-                file_id = await get_user_sticker(user_id)
-                if not file_id:
-                    file_id = await get_bot_sticker()
-                if file_id:
-                    await message.reply_sticker(file_id)
-                    return True
-        else:
-            # Normal message → 15% chance send from bot pack
-            if random.random() < 0.15:
-                file_id = await get_bot_sticker()
-                if file_id:
-                    await message.reply_sticker(file_id)
-                    return True
+        if not await has_user_stickers(user_id):
+            return False
+
+        # Normal message → 15% chance send sticker
+        if random.random() < 0.15:
+            file_id = await get_user_sticker(user_id)
+            if file_id:
+                await message.reply_sticker(file_id)
+                return True
     except Exception as e:
         log.warning(f"Sticker send error: {e}")
     return False
@@ -133,32 +125,37 @@ def _clean_message(text: str) -> str:
 
 
 # ═══════════════════════════════════════════════════════
-#  STICKER HANDLER — Save user sticker packs
+#  STICKER HANDLER — Save user sticker packs + reply
 # ═══════════════════════════════════════════════════════
 
 @Client.on_message(filters.sticker & filters.private, group=5)
 async def sticker_handler_dm(client: Client, message: Message):
-    """When user sends sticker in DM → save pack + maybe reply."""
+    """When user sends sticker in DM → save pack + maybe reply with sticker + AI."""
     try:
         user = message.from_user
         if not user or user.is_bot:
             return
 
-        # Save sticker pack
         sticker = message.sticker
-        if sticker and sticker.set_name:
-            try:
-                sticker_set = await client.get_sticker_set(sticker.set_name)
-                file_ids = [s.file_id for s in sticker_set.stickers]
-                await save_user_sticker_pack(user.id, sticker.set_name, file_ids)
-            except Exception:
-                pass
+        if not sticker or not sticker.set_name:
+            return
 
-        # Maybe reply with sticker
-        sticker_sent = await maybe_send_sticker(client, message, user.id)
+        # Fetch full sticker pack and save to DB
+        try:
+            sticker_set = await client.get_sticker_set(sticker.set_name)
+            file_ids = [s.file_id for s in sticker_set.stickers]
+            await save_user_sticker_pack(user.id, sticker.set_name, file_ids)
+        except Exception:
+            return  # silently skip if pack fetch fails
 
-        # Also reply with AI text sometimes
+        # 60% chance → reply with random sticker from same pack
+        if random.random() < 0.60:
+            reply_sticker = random.choice(file_ids)
+            await message.reply_sticker(reply_sticker)
+
+        # 50% chance → also send AI text reply
         if random.random() < 0.5:
+            await upsert_ai_user(user.id, user.username, user.first_name)
             await client.send_chat_action(message.chat.id, ChatAction.TYPING)
             reply = await get_ai_reply(user.id, "(user sent a sticker)")
             await message.reply(reply)
@@ -190,7 +187,7 @@ async def sticker_handler_group(client: Client, message: Message):
 #  AI CHAT — DM (Private)
 # ═══════════════════════════════════════════════════════
 
-@Client.on_message(filters.private & filters.incoming & ~filters.command(["start", "reset", "broadcast", "loadstickers"]) & ~filters.sticker, group=10)
+@Client.on_message(filters.private & filters.incoming & ~filters.command(["start", "reset", "broadcast"]) & ~filters.sticker, group=10)
 async def ai_chat_dm(client: Client, message: Message):
     """Every incoming DM message → AI reply."""
     try:
@@ -201,6 +198,9 @@ async def ai_chat_dm(client: Client, message: Message):
         text = message.text or message.caption or ""
         if not text.strip():
             return
+
+        # Track AI user
+        await upsert_ai_user(user.id, user.username, user.first_name)
 
         # Maybe send a sticker first
         await maybe_send_sticker(client, message, user.id)
@@ -255,6 +255,9 @@ async def ai_chat_group(client: Client, message: Message):
         if not text.strip():
             return
 
+        # Track AI user
+        await upsert_ai_user(user.id, user.username, user.first_name)
+
         # Maybe send sticker
         await maybe_send_sticker(client, message, user.id)
 
@@ -282,24 +285,3 @@ async def reset_handler(client: Client, message: Message):
         await message.reply(sc("memory cleared! fresh start senpai mode on"))
     except Exception as e:
         log.error(f"reset error: {e}")
-
-
-# ═══════════════════════════════════════════════════════
-#  /loadstickers — Owner only
-# ═══════════════════════════════════════════════════════
-
-@Client.on_message(filters.command("loadstickers") & filters.private, group=3)
-async def loadstickers_handler(client: Client, message: Message):
-    try:
-        user = message.from_user
-        if not user or user.id != int(OWNER_ID):
-            return await message.reply(sc("you are not allowed to use this command"))
-
-        sticker_set = await client.get_sticker_set(BOT_STICKER_PACK)
-        file_ids = [s.file_id for s in sticker_set.stickers]
-        await save_bot_pack(file_ids)
-        await message.reply(sc(f"loaded {len(file_ids)} stickers from {BOT_STICKER_PACK}"))
-
-    except Exception as e:
-        log.error(f"loadstickers error: {e}")
-        await message.reply(sc("failed to load sticker pack! check pack name."))

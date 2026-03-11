@@ -6,7 +6,7 @@ from database.connection import get_db
 #  USERS COLLECTION
 # ═══════════════════════════════════════════════════════
 
-async def upsert_user(user_id: int, username: str = None, first_name: str = None):
+async def upsert_user(user_id: int, username: str | None = None, first_name: str | None = None):
     """Insert or update a user in the users collection."""
     db = get_db()
     await db.users.update_one(
@@ -49,7 +49,7 @@ async def get_total_users() -> int:
 #  GROUPS COLLECTION (separate from users!)
 # ═══════════════════════════════════════════════════════
 
-async def upsert_group(chat_id: int, chat_title: str = None, username: str = None):
+async def upsert_group(chat_id: int, chat_title: str | None = None, username: str | None = None):
     """Insert or update a group in the groups collection."""
     db = get_db()
     await db.groups.update_one(
@@ -79,3 +79,33 @@ async def get_total_groups() -> int:
     """Count total groups."""
     db = get_db()
     return await db.groups.count_documents({})
+
+
+# ═══════════════════════════════════════════════════════
+#  AI_USERS COLLECTION (separate — only for AI tracking)
+# ═══════════════════════════════════════════════════════
+
+async def upsert_ai_user(user_id: int, username: str | None = None, first_name: str | None = None):
+    """Insert or update a user in the ai_users collection (AI chat tracking only)."""
+    db = get_db()
+    await db.ai_users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "username": username,
+                "first_name": first_name,
+                "last_chat": datetime.now(timezone.utc),
+            },
+            "$setOnInsert": {
+                "user_id": user_id,
+                "first_chat": datetime.now(timezone.utc),
+            },
+        },
+        upsert=True,
+    )
+
+
+async def get_ai_user(user_id: int) -> dict | None:
+    """Get a single AI user document."""
+    db = get_db()
+    return await db.ai_users.find_one({"user_id": user_id})
