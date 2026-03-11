@@ -30,7 +30,6 @@ FRIEND_GCS = []
 GROQ_API_KEY = "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"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 BOT_USERNAME = "SenpaiXChat_Bot"  # without @
-BOT_STICKER_PACK = "Smolitano_by_fStikBot"
 CHAT_HISTORY_LIMIT = 12
 
 AI_PERSONA = """
