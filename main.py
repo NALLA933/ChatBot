@@ -1,6 +1,7 @@
 import asyncio
 import logging
-from pyrogram import Client
+import sys
+from pyrogram import Client, idle
 from config import API_ID, API_HASH, BOT_TOKEN
 from database.connection import connect_db
 
@@ -18,7 +19,6 @@ for noisy in ("pyrogram", "httpx", "httpcore", "motor", "pymongo"):
     logging.getLogger(noisy).setLevel(logging.ERROR)
 
 # ──── Event loop fix for Windows + Python 3.10+ ────
-import sys
 if sys.platform == "win32" and sys.version_info >= (3, 10):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
@@ -33,15 +33,24 @@ app = Client(
 
 
 async def main():
+    # Pehle database connect karein
     await connect_db()
     log.info("MongoDB connected!")
+    
+    # Phir bot start karein
     await app.start()
     log.info("Senpai Bot is running!")
-    await asyncio.Event().wait()  # Keep alive
+    
+    # Bot ko background me active rakhne ke liye idle use karein
+    await idle()  
+    
+    # Script stop hone par bot ko safely shutdown karein
+    await app.stop()
 
 
 if __name__ == "__main__":
     try:
-        app.run(main())
+        # Pura async process yahan se trigger hoga
+        asyncio.run(main())
     except KeyboardInterrupt:
         log.info("Bot stopped.")
