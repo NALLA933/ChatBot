@@ -27,7 +27,7 @@ OWNER_LINK = "https://t.me/ll_Yoichi_Isagi_ll"
 FRIEND_GCS = []
 
 # ──── GROQ AI ────
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "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"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 BOT_USERNAME = "SenpaiXChat_Bot"  # without @
 CHAT_HISTORY_LIMIT = 12
