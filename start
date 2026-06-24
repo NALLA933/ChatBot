@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+# Start the Senpai bot using the local Python environment.
+# Make sure .env exists and contains valid values before running.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+if [ ! -f .env ]; then
+  echo ".env file not found. Create it first and add your config values."
+  exit 1
+fi
+
+python3 main.py
