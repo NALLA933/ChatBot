@@ -5,6 +5,10 @@ from pyrogram import Client, idle
 from config import API_ID, API_HASH, BOT_TOKEN
 from database.connection import connect_db
 
+# ═══════════════════════════════════════════════════════
+#  LOGGING CONFIGURATION
+# ═══════════════════════════════════════════════════════
+
 logging.basicConfig(
     level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -12,11 +16,20 @@ logging.basicConfig(
 log = logging.getLogger("SenpaiBot")
 log.setLevel(logging.INFO)
 
+# Suppress noisy library logs
 for noisy in ("pyrogram", "httpx", "httpcore", "motor", "pymongo"):
     logging.getLogger(noisy).setLevel(logging.ERROR)
 
+# ═══════════════════════════════════════════════════════
+#  EVENT LOOP POLICY (Python 3.10+ compatibility)
+# ═══════════════════════════════════════════════════════
+
 if sys.platform == "win32" and sys.version_info >= (3, 10):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# ═══════════════════════════════════════════════════════
+#  BOT CLIENT SETUP
+# ═══════════════════════════════════════════════════════
 
 app = Client(
     name="senpai_bot",
@@ -26,7 +39,13 @@ app = Client(
     plugins=dict(root="plugins"),
 )
 
-async def main():
+
+# ═══════════════════════════════════════════════════════
+#  MAIN BOT ENTRY POINT
+# ═══════════════════════════════════════════════════════
+
+async def main() -> None:
+    """Main async entry point for the bot."""
     await connect_db()
     log.info("MongoDB connected!")
     
@@ -36,10 +55,12 @@ async def main():
     await idle()
     
     await app.stop()
+    log.info("Bot stopped.")
+
 
 if __name__ == "__main__":
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(main())
+        # Python 3.10+ recommended way to run async main
+        asyncio.run(main())
     except KeyboardInterrupt:
-        log.info("Bot stopped.")
+        log.info("Bot interrupted by user.")

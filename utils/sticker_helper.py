@@ -1,6 +1,12 @@
+"""
+Sticker pack management and retrieval utilities.
+Stores user sticker packs in MongoDB with auto-expiration.
+"""
+
 import random
 import logging
 from datetime import datetime, timezone
+from typing import Optional
 from database.connection import get_db
 
 log = logging.getLogger("SenpaiBot")
@@ -12,8 +18,11 @@ log = logging.getLogger("SenpaiBot")
 #  TTL: auto-expire after 7 days of inactivity
 # ═══════════════════════════════════════════════════════
 
-async def ensure_sticker_indexes():
-    """Create TTL index on sticker_packs collection (call once on startup)."""
+async def ensure_sticker_indexes() -> None:
+    """
+    Create TTL index on sticker_packs collection (call once on startup).
+    Auto-expires documents 7 days after last update.
+    """
     db = get_db()
     await db.sticker_packs.create_index(
         "saved_at",
@@ -21,8 +30,19 @@ async def ensure_sticker_indexes():
     )
 
 
-async def save_user_sticker_pack(user_id: int, pack_name: str, file_ids: list):
-    """Upsert a sticker pack for a user. TTL resets on every save."""
+async def save_user_sticker_pack(
+    user_id: int,
+    pack_name: str,
+    file_ids: list[str]
+) -> None:
+    """
+    Upsert a sticker pack for a user. TTL resets on every save.
+    
+    Args:
+        user_id: User's Telegram ID.
+        pack_name: Name of the sticker pack.
+        file_ids: List of sticker file IDs in the pack.
+    """
     db = get_db()
     await db.sticker_packs.update_one(
         {"user_id": user_id, "pack_name": pack_name},
@@ -38,10 +58,16 @@ async def save_user_sticker_pack(user_id: int, pack_name: str, file_ids: list):
     )
 
 
-async def get_user_sticker(user_id: int) -> str | None:
+async def get_user_sticker(user_id: int) -> Optional[str]:
     """
     Return a random sticker file_id from user's most recently used pack.
     Sort by saved_at desc → pick latest pack → random sticker from it.
+    
+    Args:
+        user_id: User's Telegram ID.
+        
+    Returns:
+        Random sticker file_id from the most recent pack, or None if no packs exist.
     """
     db = get_db()
     packs = await (
@@ -59,7 +85,15 @@ async def get_user_sticker(user_id: int) -> str | None:
 
 
 async def has_user_stickers(user_id: int) -> bool:
-    """Return True if user has any saved sticker pack."""
+    """
+    Check if user has any saved sticker pack.
+    
+    Args:
+        user_id: User's Telegram ID.
+        
+    Returns:
+        True if user has at least one saved sticker pack.
+    """
     db = get_db()
     doc = await db.sticker_packs.find_one({"user_id": user_id}, {"_id": 1})
     return doc is not None

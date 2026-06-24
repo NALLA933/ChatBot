@@ -1,17 +1,31 @@
+"""
+Helper utilities for media handling and chat actions.
+"""
+
 import os
 import logging
+from typing import Optional
 from pyrogram import Client
 from pyrogram.enums import ChatAction
+from pyrogram.types import InlineKeyboardMarkup
 
 log = logging.getLogger("SenpaiBot")
 
 # ──── Supported extensions ────
-_IMAGE_EXTS = {".jpg", ".jpeg", ".png"}
-_VIDEO_EXTS = {".mp4", ".mov", ".webm"}
+_IMAGE_EXTS: set[str] = {".jpg", ".jpeg", ".png"}
+_VIDEO_EXTS: set[str] = {".mp4", ".mov", ".webm"}
 
 
 def detect_media_type(url: str) -> str:
-    """Return 'photo', 'video', or 'unknown' based on URL extension."""
+    """
+    Detect media type based on URL extension.
+    
+    Args:
+        url: URL string to analyze.
+        
+    Returns:
+        "photo", "video", or "unknown" based on file extension.
+    """
     if not url:
         return "unknown"
     ext = os.path.splitext(url.split("?")[0])[1].lower()
@@ -22,10 +36,23 @@ def detect_media_type(url: str) -> str:
     return "unknown"
 
 
-async def send_media(client: Client, chat_id: int, media, caption: str = "", reply_markup=None):
+async def send_media(
+    client: Client,
+    chat_id: int,
+    media: Optional[str | list[str]],
+    caption: str = "",
+    reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> None:
     """
     Send media (single URL or list of URLs) with caption.
     Falls back to text-only on any error.
+    
+    Args:
+        client: Pyrogram client instance.
+        chat_id: Target chat ID.
+        media: Single URL string or list of URLs (or None).
+        caption: Caption text for the media.
+        reply_markup: Optional inline keyboard markup.
     """
     if not media:
         await client.send_message(chat_id, caption, reply_markup=reply_markup)
