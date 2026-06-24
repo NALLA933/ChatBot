@@ -1,0 +1,33 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments and env files
+venv/
+.venv/
+.env
+.env.*
+
+# Bot session and runtime files
+senpai_bot.session
+senpai_bot.session-journal
+
+# Logs and databases
+*.log
+logs/
+*.sqlite3
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/project files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+tmp/
+*.pid

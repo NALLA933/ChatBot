@@ -1,38 +1,49 @@
 # ═══════════════════════════════════════════════════════════
-#                   SENPAI BOT — CONFIG
+#                   SENPAI BOT — CONFIG (env-backed)
 # ═══════════════════════════════════════════════════════════
 
-# ──── BOT CREDENTIALS ────
-API_ID = 35660683
-API_HASH = "7afb42cd73fb5f3501062ffa6a1f87f7"
-BOT_TOKEN = "8695499371:AAGEW1YRI0hlmHNMhO6STvpSDwbHqqWnQsc"
-OWNER_ID = 8453236527
+import os
+from pathlib import Path
+
+try:
+	from dotenv import load_dotenv
+	load_dotenv()
+except Exception:
+	# dotenv is optional at runtime; env vars may be provided by the host
+	pass
+
+# ──── BOT CREDENTIALS (loaded from environment) ────
+API_ID = int(os.getenv("API_ID", "0"))
+API_HASH = os.getenv("API_HASH", "")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+OWNER_ID = int(os.getenv("OWNER_ID", "0"))
 
 # ──── MONGODB ATLAS ────
-MONGO_URI = "mongodb+srv://hnyx:wywyw2@cluster0.9dxlslv.mongodb.net/?retryWrites=true&w=majority"
-DB_NAME = "senpai_bot"
+MONGO_URI = os.getenv("MONGO_URI", "")
+DB_NAME = os.getenv("DB_NAME", "senpai_bot")
 
 # ──── START MEDIA ────
 # Image: .jpg .png .jpeg | Video: .mp4 .mov .webm
 # Single URL string OR list of URLs
-START_MEDIA = "https://files.catbox.moe/yext7l.mp4"
-SEND_MEDIA_IN_GROUP = False
+START_MEDIA = os.getenv("START_MEDIA", "https://files.catbox.moe/yext7l.mp4")
+SEND_MEDIA_IN_GROUP = os.getenv("SEND_MEDIA_IN_GROUP", "False").lower() in ("1", "true", "yes")
 
 # ──── LINKS ────
-SUPPORT_GROUP = "https://t.me/THE_DRAGON_SUPPORT"
-CHANNEL_LINK = "https://t.me/Senpai_Updates"
-OWNER_LINK = "https://t.me/ll_Yoichi_Isagi_ll"
+SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "")
+CHANNEL_LINK = os.getenv("CHANNEL_LINK", "")
+OWNER_LINK = os.getenv("OWNER_LINK", "")
 
 # ──── FRIEND GC BUTTONS (max 4, show only if link is filled) ────
-FRIEND_GCS = []
+# Keep as a Python list in code; provide comma-separated links via env if needed
+FRIEND_GCS = [s for s in os.getenv("FRIEND_GCS", "").split(",") if s]
 
 # ──── GROQ AI ────
-GROQ_API_KEY = "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"
-GROQ_MODEL = "llama-3.3-70b-versatile"
-BOT_USERNAME = "SenpaiXChat_Bot"  # without @
-CHAT_HISTORY_LIMIT = 12
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "SenpaiXChat_Bot")  # without @
+CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "12"))
 
-AI_PERSONA = """
+AI_PERSONA = os.getenv("AI_PERSONA", """
 You are Senpai, a fun and friendly Telegram bot who talks like a close friend.
 You are casual, warm, funny and never boring.
 You use hinglish sometimes (Hindi + English mix).
@@ -41,13 +52,13 @@ You reply short and crisp — like a real friend texting, not an essay.
 Never say you are an AI or a bot. Just be Senpai.
 If user sends something emotional, be supportive.
 If user is being funny, match their energy.
-"""
+""")
 
 # ──── TRUTH OR DARE (TOD) SETTINGS ────
 TOD_ADULT_GROUPS = []
-TOD_DARE_TIMER = 3
-TOD_ADULT_DM = True
-TOD_MONTHLY_RESET_DAY = 1
+TOD_DARE_TIMER = int(os.getenv("TOD_DARE_TIMER", "3"))
+TOD_ADULT_DM = os.getenv("TOD_ADULT_DM", "True").lower() in ("1", "true", "yes")
+TOD_MONTHLY_RESET_DAY = int(os.getenv("TOD_MONTHLY_RESET_DAY", "1"))
 
 # ──── WELCOME MESSAGES ────
 DM_WELCOME = """
